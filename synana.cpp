@@ -51,6 +51,8 @@ void PROCEDURE();
 void FUNCTION();
 void ParametrosFormais();
 void SecaoParametros();
+void ComandoComposto();
+void Comando();
 
 string synana(string in) {
     input_syn.open(in);
@@ -130,9 +132,7 @@ void BLOCO() {
     //[Declarações de variáveis]
     if (isExpression("RW_VAR")) {
         PROX_SYN();
-
         DeclaracaoDeVariaveis();
-
         while (isExpression("SC_;")) {
             PROX_SYN();
             if (isIdentifier())
@@ -146,7 +146,7 @@ void BLOCO() {
         else
             FUNCTION();
         if (!isExpression("SC_;"))
-            SYN_ERRO(";");
+            SYN_ERRO(";2");
         PROX_SYN();
     }
 
@@ -354,4 +354,44 @@ void SecaoParametros() {
         PROX_SYN();
     } else
         SYN_ERRO("VAR | <identificador> | PROCEDURE | FUNCTION");
+}
+void ComandoComposto() {
+    //begin
+    if (!isExpression("RW_BEGIN"))
+        SYN_ERRO("BEGIN");
+    PROX_SYN();
+    //<comando>
+    Comando();
+    //{<comando>}
+    while (isIdentifier() || isExpression("RW_GOTO") || isExpression("RW_BEGIN") || isExpression("RW_IF") || isExpression("RW_WHILE"))
+        Comando();
+    //end
+    if (isExpression("RW_END"))
+        SYN_ERRO("END");
+    PROX_SYN();
+}
+//<desvio> | <comando composto> | <comando condicional> | <comando repetitivo>
+//;
+void Comando() {
+    //<atribuição> | <chamada de procedimento>
+    if (isIdentifier()) {
+
+    }
+    //<desvio>
+    else if (isExpression("RW_GOTO")) {
+
+    }
+    //<comando composto>
+    else if (isExpression("RW_BEGIN")) {
+
+    }
+    //<comando condicional>
+    else if (isExpression("RW_IF")) {
+
+    }
+    //<comando repetitivo>
+    else if (isExpression("RW_WHILE")) {
+
+    } else
+        SYN_ERRO("<identificador> | GOTO | BEGIN | IF | WHILE");
 }
