@@ -50,6 +50,7 @@ void DeclaracaoDeVariaveis();
 void PROCEDURE();
 void FUNCTION();
 void ParametrosFormais();
+void SecaoParametros();
 
 string synana(string in) {
     input_syn.open(in);
@@ -70,14 +71,14 @@ void PROGRAM() {
     
     //<Identificador>
     if (!isIdentifier())
-        SYN_ERRO("identificador");
+        SYN_ERRO("<identificador>");
     PROX_SYN();
     
     //(<Lista de identificadores>)
     while (isExpression("SC_,")) {
         PROX_SYN();
         if (!isIdentifier())
-            SYN_ERRO("identificador");
+            SYN_ERRO("<identificador>");
         PROX_SYN();
     }
     
@@ -100,13 +101,13 @@ void BLOCO() {
     if (isExpression("RW_LABEL")) {
         PROX_SYN();
         if (!isNumber())
-            SYN_ERRO("numero");
+            SYN_ERRO("<numero>");
         PROX_SYN();
 
         while (isExpression("SC_,")) {
             PROX_SYN();
             if (!isNumber())
-                SYN_ERRO("numero");
+                SYN_ERRO("<numero>");
             PROX_SYN();
         }
 
@@ -148,12 +149,15 @@ void BLOCO() {
             SYN_ERRO(";");
         PROX_SYN();
     }
+
+    //ComandoComposto();
+    //PROX_SYN();
 }
 
 void DefiniçaoDeTipo() {
     //<Identificador>
     if (!isIdentifier())
-        SYN_ERRO("identificador");
+        SYN_ERRO("<identificador>");
     PROX_SYN();
     //=
     if (!isExpression("SC_="))
@@ -189,13 +193,13 @@ void Tipo() {
         PROX_SYN();
     }
     else
-        SYN_ERRO("identificador | array | of");
+        SYN_ERRO("<identificador> | ARRAY | OF");
 }
 
 void Indice() {
     //<Numero>
     if (!isNumber())
-        SYN_ERRO("numero");
+        SYN_ERRO("<numero>");
     PROX_SYN();
     //.
     if (!isExpression("SC_."))
@@ -214,13 +218,13 @@ void Indice() {
 void DeclaracaoDeVariaveis() {
     //<Identificador>
     if (!isIdentifier())
-        SYN_ERRO("identificador");
+        SYN_ERRO("<identificador>");
     PROX_SYN();
     //(, <Identificador>)
     while (isExpression("SC_,")) {
         PROX_SYN();
         if (!isIdentifier())
-            SYN_ERRO("identificador");
+            SYN_ERRO("<identificador>");
         PROX_SYN();
     }
     //:
@@ -232,13 +236,122 @@ void DeclaracaoDeVariaveis() {
 }
 
 void PROCEDURE() {
-
+    //procedure
+    if (!isExpression("RW_PROCEDURE"))
+        SYN_ERRO("PROCEDURE");
+    PROX_SYN();
+    //<identificador>
+    if (!isIdentifier())
+        SYN_ERRO("<identificador>");
+    PROX_SYN();
+    //[parâmetros formais]
+    if (isExpression("SC_("))
+        ParametrosFormais();
+    //;
+    if (!isExpression("SC_;"))
+        SYN_ERRO(";");
+    PROX_SYN();
+    //<bloco>
+    BLOCO();
 }
 
 void FUNCTION() {
-
+    //function
+    if (!isExpression("RW_FUNCTION"))
+        SYN_ERRO("FUNCTION");
+    PROX_SYN();
+    //<identificador>
+    if (!isIdentifier())
+        SYN_ERRO("<identificador>");
+    PROX_SYN();
+    //[parâmetros formais]
+    if (isExpression("SC_("))
+        ParametrosFormais();
+    //:
+    if (!isExpression("SC_:"))
+        SYN_ERRO(":");
+    PROX_SYN();
+    //<identificador>
+    if (!isIdentifier())
+        SYN_ERRO("<identificador>");
+    PROX_SYN();
+    //;
+    if (!isExpression("SC_;"))
+        SYN_ERRO(";");
+    PROX_SYN();
+    //<bloco>
+    BLOCO();
 }
 
 void ParametrosFormais() {
-
+    //(
+    if (!isExpression("SC_("))
+        SYN_ERRO("(");
+    PROX_SYN();
+    //<seção de parâmetros formais>
+    SecaoParametros();
+    //{; <seção de parâmetros formais>}
+    while (isExpression("SC_;")) {
+        PROX_SYN();
+        SecaoParametros();
+    }
+    //)
+    if (!isExpression("SC_)"))
+        SYN_ERRO(")");
+    PROX_SYN();
+}
+void SecaoParametros() {
+    //function <lista de identificadores> : <identificador>
+    if (isExpression("RW_FUNCTION")) {
+        PROX_SYN();
+        if (!isIdentifier())
+            SYN_ERRO("<identificador>");
+        PROX_SYN();
+        while (isExpression("SC_,")) {
+            PROX_SYN();
+            if (!isIdentifier())
+                SYN_ERRO("<identificador>");
+            PROX_SYN();
+        }
+        if (!isExpression("SC_:"))
+            SYN_ERRO(":");
+        PROX_SYN();
+        if (!isIdentifier())
+            SYN_ERRO("<identificador>");
+        PROX_SYN();
+    }
+    //procedure <lista de identificadores>
+    else if (isExpression("RW_PROCEDURE")) {
+        PROX_SYN();
+        if (!isIdentifier())
+            SYN_ERRO("<identificador>");
+        PROX_SYN();
+        while (isExpression("SC_,")) {
+            PROX_SYN();
+            if (!isIdentifier())
+                SYN_ERRO("<identificador>");
+            PROX_SYN();
+        }
+    }
+    //[var] <lista de identificadores> : <identificador>
+    else if (isExpression("RW_VAR") || isIdentifier()) {
+        if (isExpression("RW_VAR"))
+            PROX_SYN();
+        if (!isIdentifier())
+            SYN_ERRO("<identificador>");
+        PROX_SYN();
+        while (isExpression("SC_,")) {
+            PROX_SYN();
+            if (!isIdentifier())
+                SYN_ERRO("<identificador>");
+            PROX_SYN();
+        }
+        if (!isExpression("SC_:"))
+            SYN_ERRO(":");
+        PROX_SYN();
+        if (!isIdentifier())
+            SYN_ERRO("<identificador>");
+        PROX_SYN();
+    } else
+        SYN_ERRO("VAR | <identificador> | PROCEDURE | FUNCTION");
 }
