@@ -53,6 +53,11 @@ void ParametrosFormais();
 void SecaoParametros();
 void ComandoComposto();
 void Comando();
+void ComandoSemRotulo();
+void Expressao();
+void ExpressaoSimples();
+void Termo();
+void Fator();
 
 string synana(string in) {
     input_syn.open(in);
@@ -146,12 +151,11 @@ void BLOCO() {
         else
             FUNCTION();
         if (!isExpression("SC_;"))
-            SYN_ERRO(";2");
+            SYN_ERRO(";");
         PROX_SYN();
     }
 
-    //ComandoComposto();
-    //PROX_SYN();
+    ComandoComposto();
 }
 
 void DefiniçaoDeTipo() {
@@ -363,35 +367,147 @@ void ComandoComposto() {
     //<comando>
     Comando();
     //{<comando>}
-    while (isIdentifier() || isExpression("RW_GOTO") || isExpression("RW_BEGIN") || isExpression("RW_IF") || isExpression("RW_WHILE"))
+    while (isNumber() | isIdentifier() || isExpression("RW_GOTO") || isExpression("RW_BEGIN") || isExpression("RW_IF") || isExpression("RW_WHILE"))
         Comando();
     //end
-    if (isExpression("RW_END"))
+    if (!isExpression("RW_END"))
         SYN_ERRO("END");
     PROX_SYN();
 }
-//<desvio> | <comando composto> | <comando condicional> | <comando repetitivo>
-//;
+
 void Comando() {
+    //<numero> :
+    if (isNumber()) {
+        PROX_SYN();
+        if (!isExpression("SC_:"))
+            SYN_ERRO(":");
+        PROX_SYN();
+    }
+    //<comando sem rotulo>
+    ComandoSemRotulo();
+
+    //if (!isExpression("SC_;"))
+    //    SYN_ERRO(";");
+    //PROX_SYN();
+}
+void ComandoSemRotulo() {
+    bool aux = true;
     //<atribuição> | <chamada de procedimento>
     if (isIdentifier()) {
-
+        PROX_SYN();
+        if (isExpression("SC_:=")) {
+            PROX_SYN();
+            Expressao();
+        } else if (isExpression("SC_(")) {
+            PROX_SYN();
+            Expressao();
+            while (isExpression("SC_,")) {
+                PROX_SYN();
+                Expressao();
+            }
+            if (!isExpression("SC_)"))
+                SYN_ERRO(")");
+            PROX_SYN();
+        } else if (!isExpression("SC_;"))
+            SYN_ERRO("<identificador> | ( | ;");
     }
     //<desvio>
     else if (isExpression("RW_GOTO")) {
-
+        PROX_SYN();
+        if (!isNumber())
+            SYN_ERRO("<numero>");
+        PROX_SYN();
     }
     //<comando composto>
     else if (isExpression("RW_BEGIN")) {
-
+        aux = false;
+        ComandoComposto();
     }
     //<comando condicional>
     else if (isExpression("RW_IF")) {
-
+        aux = false;
+        PROX_SYN();
+        Expressao();
+        if (!isExpression("RW_THEN"))
+            SYN_ERRO("THEN");
+        PROX_SYN();
+        ComandoSemRotulo();
+        if (isExpression("RW_ELSE")) {
+            PROX_SYN();
+            ComandoSemRotulo();
+        }
     }
     //<comando repetitivo>
     else if (isExpression("RW_WHILE")) {
-
+        PROX_SYN();
+        Expressao();
+        if(!isExpression("RW_DO"))
+            SYN_ERRO("DO");
+        PROX_SYN();
+        ComandoSemRotulo();
     } else
         SYN_ERRO("<identificador> | GOTO | BEGIN | IF | WHILE");
+    if (aux) {
+        if (!isExpression("SC_;"))
+            SYN_ERRO(";");
+        PROX_SYN();
+    }
+}
+
+void Expressao() {
+    ExpressaoSimples();
+    bool aux = isExpression("SC_=") || isExpression("SC_<>") || isExpression("SC_<") || isExpression("SC_<=") || isExpression("SC_>") || isExpression("SC_>=");
+    if (aux) {
+        PROX_SYN();
+        ExpressaoSimples();
+    }
+}
+
+void ExpressaoSimples() {
+    if (isExpression("SC_-") || isExpression("SC_+"))
+        PROX_SYN();
+    Termo();
+    if (isExpression("SC_-") || isExpression("SC_+") || isIdentifier() || isNumber() || isExpression("SC_(") || isExpression("RW_NOT")) {
+        PROX_SYN();
+        Termo();
+    }
+}
+
+void Termo() {
+    Fator();
+    if (isExpression("SC_*") || isExpression("RW_DIV") || isExpression("AND")) {
+        PROX_SYN();
+        Fator();
+    }
+}
+
+void Fator() {
+    if (isNumber()) {
+        PROX_SYN();
+    } else if (isExpression("SC_(")) {
+        PROX_SYN();
+        Expressao();
+        if (!isExpression("SC_)"))
+            SYN_ERRO(")");
+        PROX_SYN();
+    } else if (isExpression("RW_NOT")) {
+        PROX_SYN();
+        Fator();
+    } else if (isIdentifier()) {
+        PROX_SYN();
+        bool aux = isExpression("SC_(");
+        if (aux)
+            PROX_SYN();
+        bool aux2 = isExpression("SC_-") || isExpression("SC_+") || isIdentifier() || isIdentifier() || isExpression("RW_NOT") || isExpression("SC_(");
+        if (aux2) {
+            Expressao();
+            while (isExpression("SC_,")) {
+                PROX_SYN();
+                Expressao();
+            }
+        }
+        if (aux)
+            PROX_SYN();
+    } else
+        SYN_ERRO("<identificador> | <numero> | () | NOT");
 }

@@ -11,7 +11,7 @@ using namespace std;
 
 int line = 1, pos = 0;
 char proximo;
-set<string> comp_sp_char({":="});
+set<string> comp_sp_char({":=", "<=", ">="});
 set<char> sp_chars({'.', ';', ',', '(', ')', ':', '=', '<', '>', '+', '-', '*'});
 set<string> res_words({		"AND",
 							"BEGIN",
@@ -90,6 +90,12 @@ string AnaliseLexica() {
 		PROXIMO();
 		if (atomo == ":" && proximo == '=') {
 			atomo = ":=";
+			PROXIMO();
+		} else if (atomo == "<" && proximo == '=') {
+			atomo = "<=";
+			PROXIMO();
+		} else if (atomo == ">" && proximo == '=') {
+			atomo = ">=";
 			PROXIMO();
 		}
 		return CODIGO(atomo, 0);

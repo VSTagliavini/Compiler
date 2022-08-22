@@ -13,12 +13,12 @@ RW_PROGRAM ID_EXEMPLO1 SC_:
 RW_BEGIN 
 	ID_READ SC_( ID_N SC_) SC_; 
 	ID_S SC_:= NU_0 SC_; ID_I SC_:= NU_0 SC_; 
-	RW_WHILE ID_I SC_< SC_= ID_N RW_DO 
+	RW_WHILE ID_I SC_<= ID_N RW_DO 
 	RW_BEGIN 	
 		ID_SOMA SC_; 
 		ID_WRITE SC_( ID_S SC_) SC_; 
 		ID_I SC_:= ID_I SC_+ NU_1 SC_; 
-	RW_END 
+	RW_END SC_; 
 RW_END SC_. 
 			
 			 
